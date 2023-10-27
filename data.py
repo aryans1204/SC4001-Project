@@ -1,14 +1,16 @@
 import os
+from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, datasets, utils
 from PIL import Image
+import pytorch_lightning as pl
 
 DATA_DIRS = {
     "adience": "adience/gender",
-    "celeba": "celeba",
+    "celeba": "C:/Users/arsha/SC4001-Project/celeba",
 }
 
 GENDERS = {0: "Female", 1: "Male"}
@@ -52,7 +54,7 @@ class ImageDataset(Dataset):
     def __getitem__(self, idx):
         img_path = self.data[idx]
         img_label = self.labels[idx]
-        img = Image.open(img_path)
+        img = Image.open(img_path, mode='r')
 
         if self.transform is not None:
             img = self.transform(img)
@@ -103,7 +105,7 @@ class CelebADataset(ImageDataset):
                 if img_partition_dict[img_filename] != partition:
                     continue
 
-                img_path = os.path.join(root_dir, "img_align_celeba", tokens[0])
+                img_path = os.path.join(root_dir, "img_align_celeba/img_align_celeba", tokens[0])
                 img_label = int(tokens[21])
 
                 self.data.append(img_path)
@@ -112,7 +114,7 @@ class CelebADataset(ImageDataset):
 
 # Datasets
 # Adience
-adience_train_dataset = AdienceDataset(
+'''adience_train_dataset = AdienceDataset(
     DATA_DIRS["adience"],
     train=True,
     train_ratio=TRAIN_RATIO,
@@ -123,7 +125,7 @@ adience_test_dataset = AdienceDataset(
     train=False,
     train_ratio=TRAIN_RATIO,
     transform=DATA_TRANSFORMS["test"],
-)
+)'''
 
 # CelebA
 celeba_train_dataset = CelebADataset(
@@ -138,12 +140,12 @@ celeba_val_dataset = CelebADataset(
 
 # Dataloaders
 # Adience
-adience_train_dataloader = DataLoader(
+'''adience_train_dataloader = DataLoader(
     adience_train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=0
 )
 adience_test_dataloader = DataLoader(
     adience_test_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=0
-)
+)'''
 
 # CelebA
 celeba_train_dataloader = DataLoader(
@@ -155,3 +157,38 @@ celeba_test_dataloader = DataLoader(
 celeba_val_dataloader = DataLoader(
     celeba_val_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=0
 )
+
+class CelebAMod(pl.LightningDataModule):
+    def __init__(self, root_dir, batch_size, train_tr, val_tr, test_tr):
+        super(CelebAMod, self).__init__()
+        self.root_dir = root_dir
+        self.batch_size = batch_size
+        self.train_tr = train_tr
+        self.val_tr = val_tr
+        self.test_tr = test_tr
+
+    def setup(self, stage=None):
+        celeba_train_dataset = CelebADataset(
+            self.root_dir, partition="train", transform=self.train_tr
+        )
+        celeba_test_dataset = CelebADataset(
+            self.root_dir, partition="test", transform=self.val_tr
+        )
+        celeba_val_dataset = CelebADataset(
+            self.root_dir, partition="val", transform=self.test_tr
+        )
+        self.train_ds = celeba_train_dataset
+        self.val_ds = celeba_val_dataset
+        self.test_ds = celeba_test_dataset
+
+    def train_dataloader(self):
+        return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True, num_workers=0)
+    
+    def val_dataloader(self):
+        return DataLoader(self.val_ds, batch_size=self.batch_size, shuffle=True, num_workers=0)
+
+    def test_dataloader(self):
+        return DataLoader(self.test_ds, batch_size=self.batch_size, shuffle=True, num_workers=0)
+
+
+celebds = CelebAMod(DATA_DIRS["celeba"], BATCH_SIZE, DATA_TRANSFORMS["train"], DATA_TRANSFORMS["val"], DATA_TRANSFORMS["test"])
