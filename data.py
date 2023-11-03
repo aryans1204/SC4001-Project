@@ -175,18 +175,15 @@ class CelebAMod(pl.LightningDataModule):
         self.test_tr = test_tr
 
     def setup(self, stage=None):
-        celeba_train_dataset = CelebADataset(
+        self.train_ds = CelebADataset(
             self.root_dir, partition="train", transform=self.train_tr
         )
-        celeba_test_dataset = CelebADataset(
-            self.root_dir, partition="test", transform=self.val_tr
+        self.val_ds = CelebADataset(
+            self.root_dir, partition="val", transform=self.val_tr
         )
-        celeba_val_dataset = CelebADataset(
-            self.root_dir, partition="val", transform=self.test_tr
+        self.test_ds = CelebADataset(
+            self.root_dir, partition="test", transform=self.test_tr
         )
-        self.train_ds = celeba_train_dataset
-        self.val_ds = celeba_val_dataset
-        self.test_ds = celeba_test_dataset
 
     def train_dataloader(self):
         return DataLoader(
