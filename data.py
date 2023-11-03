@@ -172,10 +172,10 @@ class AdienceMod(pl.LightningDataModule):
         return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True, num_workers=0)
     
     def val_dataloader(self):
-        return DataLoader(self.val_ds, batch_size=self.batch_size, shuffle=True, num_workers=0)
+        return DataLoader(self.val_ds, batch_size=self.batch_size, shuffle=False, num_workers=0)
 
     def test_dataloader(self):
-        return DataLoader(self.test_ds, batch_size=self.batch_size, shuffle=True, num_workers=0)
+        return DataLoader(self.test_ds, batch_size=self.batch_size, shuffle=False, num_workers=0)
 
 class CelebADataset(ImageDataset):
     def __init__(self, root_dir, partition="train", transform=None):
