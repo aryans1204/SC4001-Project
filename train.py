@@ -94,17 +94,8 @@ class LitModel(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), **self.opt_params)
         return optimizer
-    
-'''
-def visualize_samples(dataloader, num_samples=5):
-    batch = next(iter(dataloader))
-    images, labels = batch
-    
-    for idx in range(min(num_samples, len(images))):
-        plt.imshow(np.transpose(images[idx].numpy(), (1, 2, 0)))  # Convert CxHxW to HxWxC for visualization
-        plt.title(f'Label: {labels[idx]}')
-        plt.show()
-'''
+
+#if model not loaded from checkpoint then use this to create new model with n_classes = 1   
 #model = LitModel(1)
 
 adienceds.setup()
@@ -112,12 +103,14 @@ ckpt = ModelCheckpoint()
 model = LitModel.load_from_checkpoint('epoch=7-step=325544.ckpt')
 trainer = Trainer(max_epochs=1, callbacks=[ckpt])
 trainer.fit(model, train_dataloaders=adienceds.train_dataloader(), val_dataloaders=adienceds.val_dataloader())
+model.eval()
 
+
+
+
+# This portion is just for visualization : plotting and getting the csv
+'''
 diff_length = len(model.train_losses) - len(model.val_losses)
-
-# # Extend val_losses with NaN values to match the length
-
-
 train_losses_cpu = [loss_item.detach().cpu().numpy() for loss_item in model.train_losses]
 train_accuracies_cpu = [loss_item.detach().cpu().numpy() for loss_item in model.train_accuracies]
 val_losses_cpu = [loss_item.detach().cpu().numpy() for loss_item in model.val_losses]
@@ -150,14 +143,11 @@ axes[1].legend()
 plt.savefig("losses_plot.png")
 plt.tight_layout()
 plt.show()
+'''
 
 
-
-# model.eval()
-
-# predictions = []
-# actuals = []
-
+#this is the portion where output labels are being generated and verified with the actual labels uncomment if needed
+'''
 count = 0
 pos_count = 0
 neg_count = 0
@@ -181,14 +171,7 @@ with torch.no_grad():
         
 print(f"The number of positive matches is {pos_count}")
 print(f"The number of negative matches is {neg_count}")
-  # Assuming images are in [C, H, W] format
-
-# num_images_to_show = 5
-
-# for i in range(num_images_to_show):
-#     plt.imshow(np.transpose(adienceds.test_ds[i][0].numpy(), (1, 2, 0)))  # Assuming images are in [C, H, W] format
-#     plt.title(f"Actual: {actuals[i]}, Predicted: {predictions[i]}")
-#     plt.show()
+'''
 
 
 
