@@ -1,11 +1,14 @@
 import os
+import random
 import pytorch_lightning as pl
 from PIL import Image
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 
+SEED = 69
+
 DATA_DIRS = {
-    "utkface": "C:/Users/teamo/Downloads/data/utkface",
+    "utkface": "data/utkface",
     "celeba": "C:/Users/teamo/Downloads/data/celeba",
 }
 
@@ -68,9 +71,11 @@ class UTKFaceDataset(ImageDataset):
     ):
         super().__init__(transform)
 
+        random.seed(SEED)
         val_ratio = (1 - train_ratio) / 2
 
         for root, _, files in os.walk(root_dir):
+            random.shuffle(files)
             file_count = len(files)
 
             img_files = files[: int(file_count * train_ratio)]
@@ -89,8 +94,6 @@ class UTKFaceDataset(ImageDataset):
                 # [age]_[gender]_[race]_[date&time].jpg
                 # 0 - male, 1 - female
                 img_label = abs(int(img_file.split("_")[1]) - 1)
-
-                print(img_path, img_label)
 
                 self.data.append(img_path)
                 self.labels.append(img_label)
